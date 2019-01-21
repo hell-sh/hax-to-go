@@ -1,65 +1,71 @@
 // Copyright (c) 2016-19 Hell.sh
 
-var activeNotification;
-
+var activeNotification, notificationTimer
 chrome.notifications.onClicked.addListener(id => chrome.notifications.clear(id))
-chrome.notifications.onClosed.addListener(() => activeNotification = undefined)
-
+chrome.notifications.onClosed.addListener(() => activeNotification = null)
 const showNotification = text => {
 	if(activeNotification)
 	{
 		chrome.notifications.clear(activeNotification)
 	}
+	clearTimeout(notificationTimer)
 	activeNotification = chrome.notifications.create({
 		type: "basic",
-		iconUrl: "/icon.png",
+		iconUrl: "/icon/128.png",
 		title: chrome.app.getDetails().name,
-		message: text
-	}, id => activeNotification = id)
-},
-shortenURL = url => new Promise((resolve, reject) => {
-	const protocol = url.split(":")[0]
-	if(["http", "https"].indexOf(protocol) == -1)
-	{
-		reject("Sorry, " + protocol + "://-links are not supported.")
-	}
-	else
-	{
-		reject("Successfully failed.");
-	}
-})
-
+		message: text,
+		silent: true
+	}, id => {
+		activeNotification = id
+		notificationTimer = setTimeout(() => {
+			if(activeNotification)
+			{
+				chrome.notifications.clear(activeNotification)
+				activeNotification = null
+			}
+		}, 3000)
+	})
+}
 chrome.runtime.onMessage.addListener((req, sender, respond) => {
-	if("shorten_url" in req)
-	{
-		const protocol = req.shorten_url.split(":")[0]
-		console.log("shorten", req.shorten_url)
-		if(["http", "https"].indexOf(protocol) == -1)
-		{
-			showNotification("Sorry, " + protocol + "://-links are not supported.")
-		}
-		else
-		{
-			respond(req.shorten_url)
-		}
-	}
-	else if("notification" in req)
+	if(req.notification)
 	{
 		showNotification(req.notification)
 	}
-	else
-	{
-		console.error("Can't handle request:",req)
-	}
 })
-
 chrome.commands.onCommand.addListener(command => {
 	if(command == "shorten")
 	{
-		chrome.tabs.getSelected(null, tab => {
-			shortenURL(tab.url).then(url => {
-				console.log("short url:",url)
-			}).catch(showNotification)
+		chrome.tabs.query({
+			active: true,
+			currentWindow: true
+		}, tabs => {
+			if(["http", "https"].indexOf(tabs[0].url.split(":")[0]) == -1)
+			{
+				showNotification("Sorry, " + tabs[0].url.split(":")[0] + ":// links are not supported.")
+			}
+			else
+			{
+				showNotification("Shortening link...")
+				var xhr = new XMLHttpRequest()
+				xhr.addEventListener("load", () => {
+					var json = JSON.parse(xhr.responseText)
+					if(json.id)
+					{
+						window.open(chrome.runtime.getURL("/copy.html#") + encodeURIComponent("https://hax.to/" + json.id))
+					}
+					else if(json.error)
+					{
+						showNotification(json.error)
+					}
+					else
+					{
+						showNotification("An unknown error occured.")
+					}
+				})
+				xhr.open("POST", "https://hax.to/shorten")
+				xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+				xhr.send("link=" + encodeURIComponent(tabs[0].url))
+			}
 		})
 	}
 })
