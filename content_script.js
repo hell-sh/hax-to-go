@@ -1,1 +1,0 @@
-document.documentElement.setAttribute("data-hax-to-go", "1")

@@ -26,10 +26,24 @@ const showNotification = text => {
 		}, 3000)
 	})
 }
+chrome.runtime.onMessageExternal.addListener((req, sender, respond) => {
+	if(req.get_version)
+	{
+		respond({version: chrome.app.getDetails().version})
+	}
+	else
+	{
+		console.error("Invalid request:", req)
+	}
+})
 chrome.runtime.onMessage.addListener((req, sender, respond) => {
 	if(req.notification)
 	{
 		showNotification(req.notification)
+	}
+	else
+	{
+		console.error("Invalid request:", req)
 	}
 })
 chrome.commands.onCommand.addListener(command => {

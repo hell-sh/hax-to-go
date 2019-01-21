@@ -3,7 +3,7 @@
 	"name": "Hax.To Go",
 	"description": "Combine the power of the Hax.to Linking Service, browser add-ons, and keyboard shortcuts!",
 	"author": "Hell.sh",
-	"version": "2.0.1",
+	"version": "2.0.2",
 	"icons": {
 		"48": "icon/48.png",
 		"128": "icon/128.png"
@@ -16,7 +16,6 @@
 		"default_popup": "popup.html"
 	},
 	"permissions": [
-		"https://hax.to/*",
 		"notifications",
 		"activeTab"
 	],
@@ -29,13 +28,9 @@
 			"global": false
 		}
 	},
-	"content_scripts": [
-		{
-			"matches": ["https://hax.to/"],
-			"js": ["content_script.js"],
-			"run_at": "document_start"
-		}
-	],
+	"externally_connectable": {
+		"matches": ["*://*.hax.to/*"]
+	},
 	"background": {
 		"scripts": ["background.js"],
 		"persistent": false
