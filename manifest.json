@@ -1,0 +1,46 @@
+{
+	"manifest_version": 2,
+	"name": "Hax.To Go",
+	"description": "Combine the power of the Hax.to Linking Service, browser add-ons, and keyboard shortcuts!",
+	"author": "Hell.sh",
+	"version": "2.0",
+	"icons": {
+		"48": "icon/48.png",
+		"128": "icon/128.png"
+	},
+	"browser_action": {
+		"default_icon": {
+			"48": "icon/48.png",
+			"128": "icon/128.png"
+		},
+		"default_popup": "popup.html"
+	},
+	"permissions": [
+		"clipboardWrite",
+		"notifications",
+		"activeTab"
+	],
+	"commands": {
+		"shorten": {
+			"description": "Shorten the link of the currently-focused website",
+			"suggested_key": {
+				"default": "Alt+S"
+			},
+			"global": false
+		}
+	},
+	"content_scripts": [
+		{
+			"matches": ["https://hax.to/"],
+			"js": ["content_script.js"],
+			"run_at": "document_start"
+		}
+	],
+	"background": {
+		"scripts": ["background.js"],
+		"persistent": false
+	},
+	"web_accessible_resources": [
+		"/icon.png"
+	]
+}
